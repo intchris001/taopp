@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Shop Products - TAOPP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sidebar-container {
+        background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .category-link {
+        display: block;
+        padding: 0.75rem 1rem;
+        margin: 0.25rem 0;
+        border-radius: 0.375rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: #495057;
+    }
+
+    .category-link:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+        color: #212529;
+    }
+
+    .category-link.active {
+        background: #0d6efd;
+        color: white;
+    }
+
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .product-image {
+        height: 200px;
+        object-fit: cover;
+        border-top-left-radius: 0.375rem;
+        border-top-right-radius: 0.375rem;
+    }
+
+    .product-price {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #0d6efd;
+    }
+
+    .stock-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Category Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="sidebar-container">
+                <h4 class="mb-3 text-primary">Browse Categories</h4>
+                <div class="category-list">
+                    <a href="{{ url_for('product.products') }}" 
+                       class="category-link {% if not category_id %}active{% endif %}">
+                        <i class="bi bi-grid-fill me-2"></i>All Products
+                    </a>
+                    
+                    {% for category in categories %}
+                    <a href="{{ url_for('product.products', category_id=category.id) }}" 
+                       class="category-link {% if category_id == category.id %}active{% endif %}">
+                        <i class="bi {% if category.name == 'Frozen' %}bi-snow
+                                    {% elif category.name == 'Fresh' %}bi-flower1
+                                    {% elif category.name == 'Beverages' %}bi-cup-straw
+                                    {% elif category.name == 'Home' %}bi-house
+                                    {% elif category.name == 'Pet Food' %}bi-heart
+                                    {% else %}bi-tag{% endif %} me-2"></i>
+                        {{ category.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="col-md-9">
+            <!-- Search Bar -->
+            <div class="mb-4">
+                <form class="d-flex" action="{{ url_for('product.search') }}" method="GET">
+                    <div class="input-group">
+                        <input type="search" 
+                               class="form-control" 
+                               name="q" 
+                               placeholder="Search for products..."
+                               value="{{ request.args.get('q', '') }}"
+                               aria-label="Search">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search me-1"></i>Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Section Title -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    {% if category_id %}
+                        {% for category in categories %}
+                            {% if category.id == category_id %}
+                                {{ category.name }}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        All Products
+                    {% endif %}
+                </h2>
+                <div class="text-muted">
+                    Showing {{ products.items|length }} products
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="row g-4">
+                {% for product in products.items %}
+                <div class="col-md-4">
+                    <div class="card product-card">
+                        {% if product.stock > 0 %}
+                            <span class="stock-badge bg-success">In Stock</span>
+                        {% else %}
+                            <span class="stock-badge bg-danger">Out of Stock</span>
+                        {% endif %}
+                        
+                        <img src="{{ product.image_url }}" 
+                             class="product-image" 
+                             alt="{{ product.name }}">
+                             
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="product-price mb-2">{{ "${:.2f}".format(product.price) }}</p>
+                            <p class="card-text text-muted small">{{ product.description[:100] }}...</p>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('product.product_detail', product_id=product.id) }}"
+                                   class="btn btn-outline-primary">
+                                    <i class="bi bi-info-circle me-1"></i>Details
+                                </a>
+                                {% if product.stock > 0 %}
+                                <button class="btn btn-primary add-to-cart"
+                                        data-product-id="{{ product.id }}">
+                                    <i class="bi bi-cart-plus me-1"></i>Add to Cart
+                                </button>
+                                {% else %}
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="bi bi-x-circle me-1"></i>Out of Stock
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if products.pages > 1 %}
+            <nav aria-label="Product navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if products.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                           href="{{ url_for('product.products', page=products.prev_num, category_id=category_id) }}"
+                           aria-label="Previous">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for page in products.iter_pages() %}
+                        {% if page %}
+                        <li class="page-item {% if page == products.page %}active{% endif %}">
+                            <a class="page-link" 
+                               href="{{ url_for('product.products', page=page, category_id=category_id) }}">
+                                {{ page }}
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                           href="{{ url_for('product.products', page=products.next_num, category_id=category_id) }}"
+                           aria-label="Next">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+    
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', async function(e) {
+            const productId = this.dataset.productId;
+            try {
+                const response = await fetch('/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: 1
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    // Update cart UI
+                    const cartCount = document.getElementById('cart-count');
+                    if (cartCount) {
+                        cartCount.textContent = data.cart_count;
+                    }
+                    
+                    // Show success message
+                    const toast = new bootstrap.Toast(document.getElementById('cart-toast'));
+                    document.getElementById('cart-toast-body').textContent = 'Product added to cart!';
+                    toast.show();
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

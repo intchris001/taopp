@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - TAOPP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Shipping Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Recipient Name</label>
+                        <input type="text" class="form-control" id="name" name="name"
+                            value="{{ current_user.username }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Contact Phone</label>
+                        <input type="tel" class="form-control" id="phone" name="phone"
+                            value="{{ current_user.phone or '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Shipping Address</label>
+                        <textarea class="form-control" id="address" name="address" rows="3" required>
+                        {{- current_user.address or '' -}}
+                        </textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart.items %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ "%.2f"|format(item.product.price * item.quantity) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2" class="text-end"><strong>Total:</strong></td>
+                                <td><strong class="text-primary">
+                                        ${{ "%.2f"|format(cart.items|sum(attribute='product.price') *
+                                        cart.items|sum(attribute='quantity')) }}
+                                    </strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <form method="POST" class="mt-4">
+                    <button type="submit" class="btn btn-primary w-100">Place Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

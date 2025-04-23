@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}My Orders - TAOPP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">My Orders</h5>
+            </div>
+            <div class="card-body">
+                {% if orders %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Order Date</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>{{ order.id }}</td>
+                                <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>
+                                    <span class="badge bg-{% if order.status == 'pending' %}warning
+                                                         {% elif order.status == 'processing' %}info
+                                                         {% elif order.status == 'shipped' %}primary
+                                                         {% elif order.status == 'delivered' %}success{% endif %}">
+                                        {{ order.status }}
+                                    </span>
+                                </td>
+                                <td>${{ "%.2f"|format(order.total_amount) }}</td>
+                                <td>
+                                    <a href="{{ url_for('order.order_detail', id=order.id) }}"
+                                        class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-receipt fs-1 text-muted"></i>
+                    <h5 class="mt-3">No orders yet</h5>
+                    <a href="{{ url_for('product.products') }}" class="btn btn-primary mt-3">
+                        Start Shopping
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

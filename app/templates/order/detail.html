@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Order Details - TAOPP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Order Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Order Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Order ID</th>
+                                <td>{{ order.id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Order Date</th>
+                                <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td>
+                                    <span class="badge bg-{% if order.status == 'pending' %}warning
+                                                         {% elif order.status == 'processing' %}info
+                                                         {% elif order.status == 'shipped' %}primary
+                                                         {% elif order.status == 'delivered' %}success{% endif %}">
+                                        {{ order.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Shipping Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Recipient</th>
+                                <td>{{ current_user.username }}</td>
+                            </tr>
+                            <tr>
+                                <th>Phone</th>
+                                <td>{{ current_user.phone or 'Not set' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Address</th>
+                                <td>{{ current_user.address or 'Not set' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <h6>Order Items</h6>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ item.product.image_url }}" class="img-thumbnail me-3"
+                                            style="width: 50px; height: 50px; object-fit: cover;"
+                                            alt="{{ item.product.name }}">
+                                        <div>
+                                            <h6 class="mb-0">{{ item.product.name }}</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${{ "%.2f"|format(item.price) }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ "%.2f"|format(item.price * item.quantity) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                <td><strong class="text-primary">${{ "%.2f"|format(order.total_amount) }}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Order Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item {% if order.status == 'pending' %}active{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6>Pending</h6>
+                            <p class="text-muted">Order submitted, waiting for processing</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item {% if order.status == 'processing' %}active{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6>Processing</h6>
+                            <p class="text-muted">Order is being processed</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item {% if order.status == 'shipped' %}active{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6>Shipped</h6>
+                            <p class="text-muted">Order has been shipped</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item {% if order.status == 'delivered' %}active{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6>Delivered</h6>
+                            <p class="text-muted">Order has been delivered</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -30px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #e9ecef;
+        border: 2px solid #fff;
+    }
+
+    .timeline-item.active .timeline-marker {
+        background: #0d6efd;
+    }
+
+    .timeline-content {
+        padding-left: 10px;
+    }
+
+    .timeline-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 20px;
+        width: 2px;
+        height: calc(100% - 20px);
+        background: #e9ecef;
+    }
+</style>
+{% endblock %}
